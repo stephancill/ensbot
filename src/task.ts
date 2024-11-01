@@ -29,7 +29,7 @@ async function main() {
 
   // Queue jobs
   const jobs = await queue.addBulk(
-    duneData.result.rows.slice(0, 5).map((row) => ({
+    duneData.result.rows.map((row) => ({
       name: row.name,
       data: row,
       opts: {
