@@ -20,13 +20,6 @@ export async function sendMessage(
 ): Promise<SendMessageResponse> {
   console.log("Sending message", params);
 
-  return {
-    result: {
-      messageId: "123",
-      conversationId: "456",
-    },
-  };
-
   // Validate that exactly one target is specified
   const targets = [
     params.conversationId,
@@ -56,7 +49,11 @@ export async function sendMessage(
     });
 
     if (!response.ok) {
-      throw new Error(`API request failed with status ${response.status}`);
+      throw new Error(
+        `API request failed with status ${
+          response.status
+        } (${await response.text()})`
+      );
     }
 
     return (await response.json()) as SendMessageResponse;
