@@ -20,6 +20,14 @@ export async function sendMessage(
 ): Promise<SendMessageResponse> {
   console.log("Sending message", params);
 
+  if (process.env.DISABLE_SEND_MESSAGE) {
+    return {
+      result: {
+        messageId: "mock-message-id",
+      },
+    };
+  }
+
   // Validate that exactly one target is specified
   const targets = [
     params.conversationId,

@@ -6,6 +6,10 @@ import { sendMessage } from "./lib/warpcast";
 
 dotenv.config({ path: ".env.local" });
 
+function formatJobId(row: ExpirationRow) {
+  return `${row.fid}-${new Date(row.max_expires).getTime()}-${row.name}`;
+}
+
 async function main() {
   // Get rows from query
   const duneRes = await fetch(
@@ -28,21 +32,30 @@ async function main() {
   const duneData: { result: { rows: ExpirationRow[] } } = await duneRes.json();
 
   // Queue jobs
+  const existingJobs = await queue.getJobs(["completed"]);
+  const existingJobIds = new Set(existingJobs.map((job) => job.id));
+
   const jobs = await queue.addBulk(
-    duneData.result.rows.map((row) => ({
-      name: row.name,
-      data: row,
-      opts: {
-        removeOnComplete: false,
-        jobId: `${row.fid}-${new Date(row.max_expires).getTime()}-${row.name}`,
-      },
-    }))
+    duneData.result.rows
+      .slice(0, 5)
+      .filter((row) => {
+        const jobId = formatJobId(row);
+        return !existingJobIds.has(jobId);
+      })
+      .map((row) => ({
+        name: row.name,
+        data: row,
+        opts: {
+          removeOnComplete: false,
+          jobId: formatJobId(row),
+        },
+      }))
   );
 
   if (process.env.REPORTING_FID)
     await sendMessage(
       {
-        message: `Queued ${jobs.length} jobs for ENS name expirations.`,
+        message: `Queued ${jobs.length} jobs for ENS name expiration reminders.`,
         recipientFid: process.env.REPORTING_FID,
       },
       process.env.WARPCAST_API_KEY!

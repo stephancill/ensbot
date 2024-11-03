@@ -14,7 +14,7 @@ dotenv.config({ path: ".env.local" });
 new Worker<ExpirationRow>(
   queueName,
   async (job) => {
-    await sendMessage(
+    const result = await sendMessage(
       {
         message: `Your ENS name "${
           job.data.name
@@ -24,6 +24,7 @@ new Worker<ExpirationRow>(
       },
       process.env.WARPCAST_API_KEY!
     );
+    return result;
   },
   {
     connection: redis,
