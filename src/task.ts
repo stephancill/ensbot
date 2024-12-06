@@ -37,7 +37,6 @@ async function main() {
 
   const jobs = await queue.addBulk(
     duneData.result.rows
-      .slice(0, 5)
       .filter((row) => {
         const jobId = formatJobId(row);
         return !existingJobIds.has(jobId);
